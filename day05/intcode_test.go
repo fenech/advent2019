@@ -27,13 +27,19 @@ func TestIntcode_Run(t *testing.T) {
 			[]int{123, 0, 4, 0, 99},
 			"123",
 		},
+		{
+			"Integers can be negative: 1101,100,-1,4,0 is a valid program (find 100 + -1, store the result in position 4).",
+			fields{state: []int{1101, 100, -1, 4, 0}, input: "", output: &bytes.Buffer{}},
+			[]int{1101, 100, -1, 4, 99},
+			"",
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			c := Intcode{
-				&day02.Intcode{State: tt.fields.state},
-				bufio.NewReader(strings.NewReader(tt.fields.input)),
-				bufio.NewWriter(tt.fields.output),
+			c := day02.Intcode{
+				State: tt.fields.state,
+				In:    bufio.NewReader(strings.NewReader(tt.fields.input)),
+				Out:   bufio.NewWriter(tt.fields.output),
 			}
 			gotState := c.Run()
 			if !reflect.DeepEqual(gotState, tt.wantState) {

@@ -1,19 +1,23 @@
 package day02
 
 import (
+	"bufio"
 	"bytes"
 	"io"
 	"io/ioutil"
 	"log"
 	"strconv"
+	"strings"
 )
 
 type Intcode struct {
 	Ptr   int
 	State []int
+	In    *bufio.Reader
+	Out   *bufio.Writer
 }
 
-func NewIntcode(r io.Reader) *Intcode {
+func NewIntcode(r io.Reader, i io.Reader, o io.Writer) *Intcode {
 	data, err := ioutil.ReadAll(r)
 	if err != nil {
 		log.Fatal("failed to read input:", err)
@@ -29,7 +33,11 @@ func NewIntcode(r io.Reader) *Intcode {
 		state = append(state, p)
 	}
 
-	return &Intcode{State: state}
+	return &Intcode{
+		State: state,
+		In:    bufio.NewReader(i),
+		Out:   bufio.NewWriter(o),
+	}
 }
 
 func (c *Intcode) Run() (state []int) {
@@ -42,23 +50,59 @@ func (c *Intcode) Run() (state []int) {
 }
 
 func (c *Intcode) Compute() (stop bool) {
-	switch c.State[c.Ptr] {
+	instruction := c.State[c.Ptr]
+	op := instruction % 100
+	modes := int(instruction / 100)
+
+	switch op {
 	case 1:
-		c.State[c.State[c.Ptr+3]] = c.Add(c.Ptr+1, c.Ptr+2)
-		c.Ptr += 4
+		c.Add(modes)
 	case 2:
-		c.State[c.State[c.Ptr+3]] = c.Multiply(c.Ptr+1, c.Ptr+2)
-		c.Ptr += 4
+		c.Multiply(modes)
+	case 3:
+		c.Input()
+	case 4:
+		c.Output(modes)
 	case 99:
 		stop = true
 	}
 	return
 }
 
-func (c *Intcode) Add(o1, o2 int) int {
-	return c.State[c.State[o1]] + c.State[c.State[o2]]
+func (c *Intcode) Source(modes int, ptr int) (s int) {
+	s = c.State[ptr]
+	if modes%10 == 0 {
+		s = c.State[s]
+	}
+	return
 }
 
-func (c *Intcode) Multiply(o1, o2 int) int {
-	return c.State[c.State[o1]] * c.State[c.State[o2]]
+func (c *Intcode) Add(modes int) {
+	s1 := c.Source(modes, c.Ptr+1)
+	s2 := c.Source(modes/10, c.Ptr+2)
+	c.State[c.State[c.Ptr+3]] = s1 + s2
+	c.Ptr += 4
+}
+
+func (c *Intcode) Multiply(modes int) {
+	s1 := c.Source(modes, c.Ptr+1)
+	s2 := c.Source(modes/10, c.Ptr+2)
+	c.State[c.State[c.Ptr+3]] = s1 * s2
+	c.Ptr += 4
+}
+
+func (c *Intcode) Input() {
+	s, err := c.In.ReadString('\n')
+	if err != nil {
+		log.Fatal(err)
+	}
+	d, err := strconv.Atoi(strings.TrimRight(s, "\n"))
+	c.State[c.State[c.Ptr+1]] = d
+	c.Ptr += 2
+}
+
+func (c *Intcode) Output(modes int) {
+	s1 := c.Source(modes, c.Ptr+1)
+	c.Out.WriteString(strconv.Itoa(s1))
+	c.Ptr += 2
 }
