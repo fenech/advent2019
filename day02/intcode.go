@@ -9,11 +9,11 @@ import (
 )
 
 type Intcode struct {
-	pointer int
-	State   []int
+	Ptr   int
+	State []int
 }
 
-func makeIntcode(r io.Reader) *Intcode {
+func NewIntcode(r io.Reader) *Intcode {
 	data, err := ioutil.ReadAll(r)
 	if err != nil {
 		log.Fatal("failed to read input:", err)
@@ -32,21 +32,27 @@ func makeIntcode(r io.Reader) *Intcode {
 	return &Intcode{State: state}
 }
 
-func (c *Intcode) Compute() (state []int) {
-	for c.pointer < len(c.State) {
-		switch c.State[c.pointer] {
-		case 1:
-			c.State[c.State[c.pointer+3]] = c.Add(c.pointer+1, c.pointer+2)
-			c.pointer += 4
-		case 2:
-			c.State[c.State[c.pointer+3]] = c.Multiply(c.pointer+1, c.pointer+2)
-			c.pointer += 4
-		case 99:
-			return c.State
-		}
+func (c *Intcode) Run() (state []int) {
+	var stop bool
+	for !stop && c.Ptr < len(c.State) {
+		stop = c.Compute()
 	}
 
 	return c.State
+}
+
+func (c *Intcode) Compute() (stop bool) {
+	switch c.State[c.Ptr] {
+	case 1:
+		c.State[c.State[c.Ptr+3]] = c.Add(c.Ptr+1, c.Ptr+2)
+		c.Ptr += 4
+	case 2:
+		c.State[c.State[c.Ptr+3]] = c.Multiply(c.Ptr+1, c.Ptr+2)
+		c.Ptr += 4
+	case 99:
+		stop = true
+	}
+	return
 }
 
 func (c *Intcode) Add(o1, o2 int) int {

@@ -16,8 +16,8 @@ func Part1() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	computer := makeIntcode(file)
+	computer := NewIntcode(file)
 	computer.State[1] = 12
 	computer.State[2] = 2
-	fmt.Println(computer.Compute())
+	fmt.Println(computer.Run())
 }

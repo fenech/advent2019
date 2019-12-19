@@ -5,7 +5,7 @@ import (
 	"testing"
 )
 
-func TestIntcode_Compute(t *testing.T) {
+func TestIntcode_Run(t *testing.T) {
 	type fields struct {
 		pointer int
 		state   []int
@@ -40,11 +40,11 @@ func TestIntcode_Compute(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			c := &Intcode{
-				pointer: tt.fields.pointer,
-				State:   tt.fields.state,
+				Ptr:   tt.fields.pointer,
+				State: tt.fields.state,
 			}
-			if gotState := c.Compute(); !reflect.DeepEqual(gotState, tt.wantState) {
-				t.Errorf("Intcode.Compute() = %v, want %v", gotState, tt.wantState)
+			if gotState := c.Run(); !reflect.DeepEqual(gotState, tt.wantState) {
+				t.Errorf("Intcode.Run() = %v, want %v", gotState, tt.wantState)
 			}
 		})
 	}
