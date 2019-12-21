@@ -63,30 +63,38 @@ func (c *Intcode) Compute() (stop bool) {
 		c.Input()
 	case 4:
 		c.Output(modes)
+	case 5:
+		c.JumpIfTrue(modes)
+	case 6:
+		c.JumpIfFalse(modes)
+	case 7:
+		c.LessThan(modes)
+	case 8:
+		c.Equals(modes)
 	case 99:
 		stop = true
 	}
 	return
 }
 
-func (c *Intcode) Source(modes int, ptr int) (s int) {
-	s = c.State[ptr]
+func (c *Intcode) Source(modes, ptr int) (int, int) {
+	s := c.State[ptr]
 	if modes%10 == 0 {
 		s = c.State[s]
 	}
-	return
+	return s, modes / 10
 }
 
 func (c *Intcode) Add(modes int) {
-	s1 := c.Source(modes, c.Ptr+1)
-	s2 := c.Source(modes/10, c.Ptr+2)
+	s1, modes := c.Source(modes, c.Ptr+1)
+	s2, modes := c.Source(modes, c.Ptr+2)
 	c.State[c.State[c.Ptr+3]] = s1 + s2
 	c.Ptr += 4
 }
 
 func (c *Intcode) Multiply(modes int) {
-	s1 := c.Source(modes, c.Ptr+1)
-	s2 := c.Source(modes/10, c.Ptr+2)
+	s1, modes := c.Source(modes, c.Ptr+1)
+	s2, modes := c.Source(modes, c.Ptr+2)
 	c.State[c.State[c.Ptr+3]] = s1 * s2
 	c.Ptr += 4
 }
@@ -102,7 +110,49 @@ func (c *Intcode) Input() {
 }
 
 func (c *Intcode) Output(modes int) {
-	s1 := c.Source(modes, c.Ptr+1)
-	c.Out.WriteString(strconv.Itoa(s1))
+	s, _ := c.Source(modes, c.Ptr+1)
+	c.Out.WriteString(strconv.Itoa(s) + "\n")
 	c.Ptr += 2
+}
+
+func (c *Intcode) JumpIfTrue(modes int) {
+	s1, modes := c.Source(modes, c.Ptr+1)
+	s2, modes := c.Source(modes, c.Ptr+2)
+	if s1 != 0 {
+		c.Ptr = s2
+	} else {
+		c.Ptr += 3
+	}
+}
+
+func (c *Intcode) JumpIfFalse(modes int) {
+	s1, modes := c.Source(modes, c.Ptr+1)
+	s2, modes := c.Source(modes, c.Ptr+2)
+	if s1 == 0 {
+		c.Ptr = s2
+	} else {
+		c.Ptr += 3
+	}
+}
+
+func (c *Intcode) LessThan(modes int) {
+	s1, modes := c.Source(modes, c.Ptr+1)
+	s2, modes := c.Source(modes, c.Ptr+2)
+	if s1 < s2 {
+		c.State[c.State[c.Ptr+3]] = 1
+	} else {
+		c.State[c.State[c.Ptr+3]] = 0
+	}
+	c.Ptr += 4
+}
+
+func (c *Intcode) Equals(modes int) {
+	s1, modes := c.Source(modes, c.Ptr+1)
+	s2, modes := c.Source(modes, c.Ptr+2)
+	if s1 == s2 {
+		c.State[c.State[c.Ptr+3]] = 1
+	} else {
+		c.State[c.State[c.Ptr+3]] = 0
+	}
+	c.Ptr += 4
 }

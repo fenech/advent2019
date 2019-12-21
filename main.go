@@ -8,4 +8,5 @@ import (
 func main() {
 	day02.Part1("day02/input.txt")
 	day05.Part1("day05/input.txt")
+	day05.Part2("day05/input.txt")
 }
