@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"io"
 	"log"
-	"os"
 	"strings"
 )
 
@@ -46,11 +45,6 @@ func Checksum(r io.Reader) (c int) {
 	return
 }
 
-func Part1(path string) {
-	file, err := os.Open(path)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	log.Println(Checksum(file))
+func Part1(r io.Reader) {
+	log.Println(Checksum(r))
 }

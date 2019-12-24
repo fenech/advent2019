@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"io"
 	"log"
-	"os"
 	"strings"
 )
 
@@ -34,11 +33,6 @@ func Distance(r io.Reader) int {
 	return len(you) + len(san) - 2*(1+i)
 }
 
-func Part2(path string) {
-	file, err := os.Open(path)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	log.Println(Distance(file))
+func Part2(r io.Reader) {
+	log.Println(Distance(r))
 }
